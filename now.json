@@ -8,12 +8,20 @@
         {
             "src": "app.js",
             "use": "@now/node"
+        },
+        {
+            "src": "/api/giphy.js",
+            "use": "@now/node"
+        },
+        {
+            "src": "/api/getIsfDetails.js",
+            "use": "@now/node"
         }
     ],
     "routes": [
         {
             "src": "/",
-            "dest": "/dist/index.html"
+            "dest": "/app.js"
         },
         {
             "src": "/favicon.ico",
@@ -21,7 +29,11 @@
         },
         {
             "src": "/search",
-            "dest": "/app.js"
+            "dest": "/api/giphy.js"
+        },
+        {
+            "src": "/isf",
+            "dest": "/api/getIsfDetails.js"
         }
     ]
 }

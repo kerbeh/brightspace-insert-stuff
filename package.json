@@ -1,21 +1,24 @@
 {
   "name": "insert-stuff-for-everyone",
   "version": "0.0.1",
-  "description": "Simple applicaiton to demonstrate a Vrightspace LMS Insert Stuff LTI Deep Linking Integration",
+  "description": "Simple applicaiton to demonstrate a Brightspace LMS Insert Stuff LTI Integration",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "bundle": "parcel build --no-content-hash ./public/index.html --public-url ."
   },
   "author": "Tristan Kirby <tristan.kirby@deakin.edu.au>",
   "license": " CC-BY-4.0",
   "dependencies": {
     "@brightspace-ui/core": "^1.5.1",
+    "body-parser": "^1.19.0",
     "giphy-api": "^2.0.1",
-    "oauth-1.0a": "^2.2.6",
     "parcel-bundler": "^1.12.3",
     "parcel-plugin-inliner": "^1.0.10"
   },
   "devDependencies": {
-    "eslint": "^6.2.1"
+    "eslint": "^6.2.1",
+    "now": "^16.2.0",
+    "now-cli": "0.0.0"
   }
 }

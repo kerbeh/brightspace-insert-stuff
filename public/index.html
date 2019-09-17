@@ -1,19 +1,226 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Document</title>
-    <script src="./scripts.js"></script>
-  </head>
-  <body class="d2l-typography">
-    <h1>This should be d2l styled</h1>
-    <div>
-      <d2l-floating-buttons>
-        <d2l-button primary>Save</d2l-button>
-        <d2l-button>Cancel</d2l-button>
-      </d2l-floating-buttons>
-    </div>
-  </body>
-</html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>CIM Search</title>
+  <script src="./scripts.js"></script>
+  <style>
+    .d2l-input {
+      border-radius: 0.3rem;
+      border-style: solid;
+      border-color: #868c8f;
+      box-sizing: border-box;
+      display: inline-block;
+      margin: 0;
+      min-width: calc(2rem + 1em);
+      vertical-align: middle;
+      width: 80%;
+      transition: background-color 0.5s ease, border-color 0.001s ease;
+    }
+
+    .d2l-input-text {
+      color: #494c4e;
+      /*font-family: inherit; ... for now, this needs to be added within the style of the component html file where needed, as trying
+					to use this with @apply leads to an issue documented here: https://github.com/webcomponents/shadycss/issues/91 ... when this is fixed,
+					we can add it back to here */
+      font-size: 0.8rem;
+      font-weight: 400;
+      letter-spacing: 0.02rem;
+      /* using min-height and line-height as IE11
+					 * doesn't support line-height on inputs */
+      line-height: 1.2rem;
+      min-height: calc(2rem + 2px);
+    }
+
+    .d2l-input-hover-focus {
+      border-color: #006fbf;
+      border-width: 2px;
+      outline-style: none;
+      outline-width: 0;
+      padding: calc(0.4rem - 1px) calc(0.75rem - 1px);
+    }
+
+    button {
+      font-family: inherit;
+      font-size: 0.7rem;
+      line-height: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      padding: 0.5rem 1.5rem;
+      width: 100%;
+      border-radius: 0.3rem;
+      border-style: solid;
+      border-width: 1px;
+      box-shadow: 0 0 0 4px rgba(0, 0, 0, 0);
+      box-sizing: border-box;
+      cursor: pointer;
+      display: inline-block;
+      margin: 0;
+      min-height: calc(2rem + 2px);
+      outline: none;
+      text-align: center;
+      transition: box-shadow 0.2s;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      vertical-align: middle;
+      white-space: nowrap;
+      width: auto;
+    }
+
+    button:focus {
+      box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #006fbf;
+    }
+
+    /* Firefox includes a hidden border which messes up button dimensions */
+    button::-moz-focus-inner {
+      border: 0;
+    }
+
+
+    button,
+    button[disabled]:hover,
+    button[disabled]:focus,
+    :host([active]) button[disabled] {
+      background-color: #f9fbff;
+      border-color: #cdd5dc;
+      color: #494c4e;
+    }
+
+    button:hover,
+    button:focus {
+      background-color: #e3e9f1;
+    }
+
+    .show {
+      opacity: 1;
+      transition: opacity 1000ms;
+    }
+
+    .hide {
+      opacity: 0;
+      transition: opacity 1000ms;
+    }
+
+    #searchresults img {
+      width: 120px;
+      height: 120px;
+    }
+
+    #searchresults img:focus {
+      box-shadow: #868c8f;
+    }
+
+    .object {
+      object-fit: cover;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      margin: 0.2rem;
+    }
+  </style>
+</head>
+
+<body class="d2l-typography">
+
+  <form id="cimform" method="POST" encType="application/x-www-form-urlencoded">
+    <input type="hidden" name="lti_message_type" />
+    <input type="hidden" name="lti_version" />
+    <input type="hidden" name="content_items" />
+    <input type="hidden" name="oauth_version" />
+    <input type="hidden" name="oauth_nonce" />
+    <input type="hidden" name="oauth_timestamp" />
+    <input type="hidden" name="oauth_consumer_key" />
+    <input type="hidden" name="oauth_callback" />
+    <input type="hidden" name="oauth_signature_method" />
+    <input type="hidden" name="oauth_signature" />
+  </form>
+
+  <form name="searchform" id="search-form">
+    <input type="search" name="search" id="giphy-search-input" class="d2l-input d2l-input-hover-focus d2l-input-text">
+    <button id="search-button">Search</button>
+  </form>
+
+  <div id="searchresults" class="hide">
+
+  </div>
+  <small>Powered By Giphy</small>
+  <script>
+
+    document.getElementById("search-form").addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      fetch(`/search?keyword=${document.forms.searchform.search.value}`, {
+        credentials: "include",
+        method: "GET",
+        headers: {
+          "token": "test"
+        },
+      }).then((response) => {
+        return response.json();
+      }).then((json) => {
+
+        const searchResultsDiv = document.getElementById("searchresults");
+        searchResultsDiv.innerHTML = '';
+        json.json.forEach(giphyImage => {
+          let img = document.createElement("img");
+          img.src = giphyImage.preview.url;
+          img.title = giphyImage.title;
+          img.classList.add('object');
+          img.setAttribute("data-width", giphyImage.downsized.width);
+          img.setAttribute("data-height", giphyImage.downsized.height);
+          img.setAttribute("data-url", giphyImage.downsized.url);
+          img.setAttribute("data-title", giphyImage.title);
+          img.setAttribute("tabindex", 0);
+          img.setAttribute("role", "button");
+          img.addEventListener("click", insertContent)
+
+          searchResultsDiv.appendChild(img);
+        });
+        searchResultsDiv.classList.add('show');
+        searchResultsDiv.classList.remove('hide');
+
+      })
+    });
+
+    function insertContent(clickedImage) {
+      let url = new URL("https://brightspace-insert-stuff.tristankirby.now.sh/isf"),
+        params = {
+          image: clickedImage.target.dataset.url,
+          width: clickedImage.target.dataset.width,
+          height: clickedImage.target.dataset.height,
+          title: clickedImage.target.dataset.title,
+          contentItemReturnUrl: document.content_item_return_url
+        }
+      Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
+
+      fetch(url, {
+        method: 'GET', // *GET, POST, PUT, DELETE, etc.
+        mode: 'cors', // no-cors, cors, *same-origin
+        cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+        credentials: 'same-origin', // include, *same-origin, omit
+
+      }).then((response) => {
+        return response.json();
+      }).then((jsonResponse) => {
+
+        document.forms[0].lti_message_type.value = jsonResponse.lti_message_type;
+        document.forms[0].lti_version.value = jsonResponse.lti_version;
+        document.forms[0].content_items.value = jsonResponse.content_items;
+        document.forms[0].oauth_version.value = jsonResponse.oauth_version;
+        document.forms[0].oauth_nonce.value = jsonResponse.oauth_nonce;
+        document.forms[0].oauth_timestamp.value = jsonResponse.oauth_timestamp;
+        document.forms[0].oauth_consumer_key.value = jsonResponse.oauth_consumer_key;
+        document.forms[0].oauth_callback.value = jsonResponse.oauth_callback;
+        document.forms[0].oauth_signature_method.value = jsonResponse.oauth_signature_method;
+        document.forms[0].oauth_signature.value = jsonResponse.oauth_signature;
+        document.forms[0].action = jsonResponse.lti_return_url;
+      }).then(() => {
+        document.forms[0].submit();
+      })
+    };
+  </script>
